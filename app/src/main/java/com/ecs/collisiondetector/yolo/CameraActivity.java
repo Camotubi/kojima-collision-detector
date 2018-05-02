@@ -41,7 +41,7 @@ public class CameraActivity extends Activity {
     super.onCreate(savedInstanceState);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-    setContentView(R.layout.activity_camera);
+    setContentView(R.layout.yolo1activity_camera);
 
     if (hasPermission()) {
       if (null == savedInstanceState) {

@@ -293,7 +293,7 @@ public class CameraConnectionFragment extends Fragment {
   @Override
   public View onCreateView(
       final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-    View v = inflater.inflate(R.layout.camera_connection_fragment, container, false);
+    View v = inflater.inflate(R.layout.yolo1camera_connection_fragment, container, false);
     // Button used for testing purposes. If you want to activate uncomment button in xml too.
 //    ImageButton b = (ImageButton) v.findViewById(R.id.TakePicButton);
 //    b.setOnClickListener(new View.OnClickListener() {
