@@ -107,6 +107,22 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
         runInBackground(() -> {
             final long startTime = SystemClock.uptimeMillis();
             final List<Recognition> results = recognizer.recognizeImage(croppedBitmap);
+
+            Log.e(LOGGING_TAG, results.toString());
+            if(results.size()>0) {
+                final Recognition firstResult = results.get(0);
+                double width = firstResult.getLocation().getWidth();
+                //DistanceCalculator distanceCalculator1 = new DistanceCalculator();
+                //DistanceCalculator distanceCalculator2 = new DistanceCalculator();
+                //distanceCalculator1.setFocalLength(0.026);
+                //distanceCalculator2.setFocalLength(0.035);
+                double focalLength1 = 26;
+                double focalLength2 = 35;
+
+                Log.e(LOGGING_TAG,"Calculator1: "+ 4318 * focalLength1 / width);
+                Log.e(LOGGING_TAG,"Calculator2: "+
+                        +4318 * focalLength2 / width);
+            }
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
             overlayView.setResults(results);
             speak(results);
