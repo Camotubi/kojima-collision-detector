@@ -13,6 +13,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 
+import com.ecs.collisiondetector.DistanceCalculator;
 import com.ecs.collisiondetector.yolo2.TensorFlowImageRecognizer;
 import com.ecs.collisiondetector.yolo2.model.Recognition;
 import com.ecs.collisiondetector.yolo2.util.ImageUtils;
@@ -112,16 +113,13 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
             if(results.size()>0) {
                 final Recognition firstResult = results.get(0);
                 double width = firstResult.getLocation().getWidth();
-                //DistanceCalculator distanceCalculator1 = new DistanceCalculator();
-                //DistanceCalculator distanceCalculator2 = new DistanceCalculator();
-                //distanceCalculator1.setFocalLength(0.026);
-                //distanceCalculator2.setFocalLength(0.035);
-                double focalLength1 = 26;
-                double focalLength2 = 35;
+                DistanceCalculator distanceCalculator1 = new DistanceCalculator();
+                DistanceCalculator distanceCalculator2 = new DistanceCalculator();
+                distanceCalculator1.setFocalLength(26);
+                distanceCalculator2.setFocalLength(35);
 
-                Log.e(LOGGING_TAG,"Calculator1: "+ 4318 * focalLength1 / width);
-                Log.e(LOGGING_TAG,"Calculator2: "+
-                        +4318 * focalLength2 / width);
+                Log.e(LOGGING_TAG,"Calculator1: "+ distanceCalculator1.calculateDistance(width, 4318));
+                Log.e(LOGGING_TAG,"Calculator2: "+distanceCalculator1.calculateDistance(width, 4318));
             }
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
             overlayView.setResults(results);

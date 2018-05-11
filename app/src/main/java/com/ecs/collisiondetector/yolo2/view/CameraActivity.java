@@ -12,7 +12,6 @@ import android.util.Log;
 import android.util.Size;
 import android.view.WindowManager;
 import android.widget.Toast;
-
 //import com.ecs.collisiondetector.yolo2.R;
 
 import com.ecs.collisiondetector.R;

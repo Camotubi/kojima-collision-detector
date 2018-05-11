@@ -79,7 +79,7 @@ public class CameraConnectionFragment extends Fragment {
      */
     private final Semaphore cameraOpenCloseLock = new Semaphore(1);
     /**
-     * A {@link OnImageAvailableListener} to receive frames as they are available.
+
      */
     private OnImageAvailableListener imageListener;
 
