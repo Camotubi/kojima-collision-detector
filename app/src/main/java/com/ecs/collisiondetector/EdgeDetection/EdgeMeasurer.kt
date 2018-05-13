@@ -3,7 +3,7 @@ package com.ecs.collisiondetector.EdgeDetection
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 
-class EdgeDetector {
+class EdgeMeasurer {
     var bitmap :Bitmap = Bitmap.createBitmap(1,1,Bitmap.Config.RGB_565)
     fun EdgeDetector(bmp: Bitmap)
     {

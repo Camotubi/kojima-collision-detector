@@ -1,30 +1,20 @@
 package com.ecs.collisiondetector
 
 import android.content.Intent
-import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.view.View.OnClickListener
-import android.view.WindowManager
-import android.widget.Button
 import com.ecs.collisiondetector.yolo2.view.ClassifierActivity
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import android.widget.ImageView
 import com.ecs.collisiondetector.EdgeDetection.Canny
-import com.ecs.collisiondetector.EdgeDetection.EdgeDetector
-import org.opencv.android.Utils
-import org.opencv.imgproc.Imgproc
-import org.opencv.core.CvType
-import java.nio.file.Files.size
-import org.opencv.core.Mat
+import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.BaseLoaderCallback
-import java.nio.ByteBuffer
 
 
 class MainActivity : AppCompatActivity() , OnClickListener {
@@ -71,7 +61,7 @@ class MainActivity : AppCompatActivity() , OnClickListener {
 
         val bmp = BitmapFactory.decodeResource(resources,R.drawable.wot)
         val edgeBmp = Canny.detectEdges(bmp)
-        val edgeWidth = EdgeDetector.getWidth(edgeBmp)
+        val edgeWidth = EdgeMeasurer.getWidth(edgeBmp)
         Log.d("WIDTH APARATO", "Width: $edgeWidth")
         val edgeDrawable = BitmapDrawable(resources,edgeBmp)
         val boxDrawable = BitmapDrawable(resources,bmp)
