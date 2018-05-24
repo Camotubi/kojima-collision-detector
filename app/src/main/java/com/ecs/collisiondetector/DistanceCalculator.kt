@@ -16,6 +16,7 @@ class DistanceCalculator {
     fun calculateFocalLength(pixelWidth:Double, width:Double, distance:Double):Double {
       return pixelWidth * distance / width
     }
+    @JvmStatic
     fun calculateDistance(pixelWidth:Double, width:Double, focalLength:Double):Double {
       return width * focalLength / pixelWidth
     }

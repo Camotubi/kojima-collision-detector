@@ -14,6 +14,7 @@ import android.util.Size;
 import android.util.TypedValue;
 
 import com.ecs.collisiondetector.DistanceCalculator;
+import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer;
 import com.ecs.collisiondetector.yolo2.TensorFlowImageRecognizer;
 import com.ecs.collisiondetector.yolo2.model.Recognition;
 import com.ecs.collisiondetector.yolo2.util.ImageUtils;
@@ -71,6 +72,10 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
         Log.i(LOGGING_TAG, String.format("Initializing at size %dx%d", previewWidth, previewHeight));
 
         croppedBitmap = Bitmap.createBitmap(INPUT_SIZE, INPUT_SIZE, Config.ARGB_8888);
+
+        int pixelWidth = EdgeMeasurer.getWidth(croppedBitmap);
+
+        DistanceCalculator.calculateDistance(pixelWidth, 1871, 35);
 
         frameToCropTransform = ImageUtils.getTransformationMatrix(previewWidth, previewHeight,
                 INPUT_SIZE, INPUT_SIZE, sensorOrientation, MAINTAIN_ASPECT);

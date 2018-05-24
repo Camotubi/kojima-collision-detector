@@ -29,6 +29,7 @@ class EdgeMeasurer {
             }
             return arrayOf(p1,p2)
         }
+        @JvmStatic
         fun getWidth(bmp: Bitmap) : Int{
             val farthests = getFarthest(bmp)
             return Math.abs(farthests[0][0] - farthests[1][0])
