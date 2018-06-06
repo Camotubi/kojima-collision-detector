@@ -8,6 +8,7 @@ import org.opencv.imgproc.Imgproc
 
 class Canny {
     companion object {
+        @JvmStatic
         fun detectEdges(bitmap: Bitmap): Bitmap {
             val rgba = Mat()
             Utils.bitmapToMat(bitmap, rgba)

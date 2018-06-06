@@ -14,6 +14,7 @@ import android.util.Size;
 import android.util.TypedValue;
 
 import com.ecs.collisiondetector.DistanceCalculator;
+import com.ecs.collisiondetector.EdgeDetection.Canny;
 import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer;
 import com.ecs.collisiondetector.yolo2.TensorFlowImageRecognizer;
 import com.ecs.collisiondetector.yolo2.model.Recognition;
@@ -117,14 +118,17 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
             Log.e(LOGGING_TAG, results.toString());
             if(results.size()>0) {
                 final Recognition firstResult = results.get(0);
-                double width = firstResult.getLocation().getWidth();
+                Float width = firstResult.getLocation().getRight();
+                Float height = firstResult.getLocation().getBottom();
+                Bitmap elBitmap = Bitmap.createBitmap(Math.round(width), Math.round(height), Config.ARGB_8888);
+                Bitmap edgeBmp = Canny.detectEdges(elBitmap);
+                int widthInPix = EdgeMeasurer.getWidth(edgeBmp);
                 DistanceCalculator distanceCalculator1 = new DistanceCalculator();
                 DistanceCalculator distanceCalculator2 = new DistanceCalculator();
                 distanceCalculator1.setFocalLength(26);
                 distanceCalculator2.setFocalLength(35);
-
-                Log.e(LOGGING_TAG,"Calculator1: "+ distanceCalculator1.calculateDistance(width, 4318));
-                Log.e(LOGGING_TAG,"Calculator2: "+distanceCalculator1.calculateDistance(width, 4318));
+                Log.e(LOGGING_TAG,"Calculator1: "+ distanceCalculator1.calculateDistance(widthInPix, 4318));
+                Log.e(LOGGING_TAG,"Calculator2: "+distanceCalculator1.calculateDistance(widthInPix, 4318));
             }
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
             overlayView.setResults(results);
