@@ -8,7 +8,10 @@ import android.view.View.OnClickListener
 import com.ecs.collisiondetector.yolo2.view.ClassifierActivity
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import android.util.Log
+import android.view.WindowManager
+import android.widget.Button
 import android.widget.ImageView
 import com.ecs.collisiondetector.EdgeDetection.Canny
 import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer
@@ -32,12 +35,13 @@ class MainActivity : AppCompatActivity() , OnClickListener {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.testing_layout)
+        //setContentView(R.layout.testing_layout)
 
-        /*setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main)
+
         val button : Button = findViewById(R.id.button)
         button.setOnClickListener(this)
-
+/*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
         {
             window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -59,14 +63,14 @@ class MainActivity : AppCompatActivity() , OnClickListener {
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
-        val bmp = BitmapFactory.decodeResource(resources,R.drawable.wot)
+        /*val bmp = BitmapFactory.decodeResource(resources,R.drawable.wot)
         val edgeBmp = Canny.detectEdges(bmp)
         val edgeWidth = EdgeMeasurer.getWidth(edgeBmp)
         Log.d("WIDTH APARATO", "Width: $edgeWidth")
         val edgeDrawable = BitmapDrawable(resources,edgeBmp)
         val boxDrawable = BitmapDrawable(resources,bmp)
         val imgView = findViewById<ImageView>(R.id.imageView2)
-        imgView.setImageDrawable(edgeDrawable)
+        imgView.setImageDrawable(edgeDrawable)*/
     }
     override fun onClick(v: View?) {
         val intent = Intent(this, ClassifierActivity::class.java)
@@ -75,12 +79,13 @@ class MainActivity : AppCompatActivity() , OnClickListener {
 
     //Function to call and manage the fragments
     private fun replaceFragment(fragment: android.support.v4.app.Fragment?){
-       /* val fragmentTransaction = supportFragmentManager.beginTransaction()
+      /* val fragmentTransaction = supportFragmentManager.beginTransaction()
         //To replace the fragment it needs the id of the container
         // in this case being the Frame Layout of the Activity
         // and the fragement that is going to be replaced with
         fragmentTransaction.replace(fragmentContainer.id, fragment)
-        fragmentTransaction.commit()*/
+        fragmentTransaction.commit()
+        */
     }
 
 
