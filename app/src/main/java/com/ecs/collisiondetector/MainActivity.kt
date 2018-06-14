@@ -11,8 +11,10 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.util.Log
 import android.view.WindowManager
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.Spinner
 import com.ecs.collisiondetector.EdgeDetection.Canny
 import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer
 import org.opencv.android.LoaderCallbackInterface
@@ -41,14 +43,14 @@ class MainActivity : AppCompatActivity() , OnClickListener {
 
         val button : Button = findViewById(R.id.button)
         button.setOnClickListener(this)
-/*
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-        {
-            window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-        }
-        val fragment = PreviewFragment.newInstance()
-        replaceFragment(fragment)*/
+        val spinner : Spinner = findViewById(R.id.spinner)
+        val supportedDevicesStringList = DistanceCalculator.supportedDevicesList.map{ it.name }.toTypedArray()
+        var spinnerAdapter = ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, supportedDevicesStringList)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = spinnerAdapter
+
+
+
     }
 
     public override fun onResume() {
@@ -63,17 +65,13 @@ class MainActivity : AppCompatActivity() , OnClickListener {
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
-        /*val bmp = BitmapFactory.decodeResource(resources,R.drawable.wot)
-        val edgeBmp = Canny.detectEdges(bmp)
-        val edgeWidth = EdgeMeasurer.getWidth(edgeBmp)
-        Log.d("WIDTH APARATO", "Width: $edgeWidth")
-        val edgeDrawable = BitmapDrawable(resources,edgeBmp)
-        val boxDrawable = BitmapDrawable(resources,bmp)
-        val imgView = findViewById<ImageView>(R.id.imageView2)
-        imgView.setImageDrawable(edgeDrawable)*/
     }
     override fun onClick(v: View?) {
+
         val intent = Intent(this, ClassifierActivity::class.java)
+        val spinner = findViewById<Spinner>(R.id.spinner)
+        val focalLength =  DistanceCalculator.supportedDevicesList[spinner.selectedItemPosition].focalLength
+        intent.putExtra("focalLength",focalLength)
         this.startActivity(intent)
     }
 

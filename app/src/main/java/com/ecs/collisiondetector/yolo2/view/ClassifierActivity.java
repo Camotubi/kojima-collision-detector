@@ -1,6 +1,7 @@
 package com.ecs.collisiondetector.yolo2.view;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -9,6 +10,7 @@ import android.graphics.Typeface;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
@@ -54,6 +56,23 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
     private OverlayView overlayView;
     private BorderedText borderedText;
     private long lastProcessingTimeMs;
+    private long lastDistanceProcessingTimeMs = 0;
+    private Double focalLength = 0.0;
+    private int widthInPix = 0;
+
+    private  List<Recognition> results;
+    @Override
+    public synchronized  void onCreate(Bundle bundle) {
+        Intent intent = getIntent();
+        focalLength = intent.getDoubleExtra("focalLength",0.0);
+
+        super.onCreate(bundle);
+    }
+    @Override
+    public synchronized void onResume() {
+
+        super.onResume();
+    }
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -79,9 +98,6 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
 
         croppedBitmap = Bitmap.createBitmap(INPUT_SIZE, INPUT_SIZE, Config.ARGB_8888);
 
-        int pixelWidth = EdgeMeasurer.getWidth(croppedBitmap);
-
-        DistanceCalculator.calculateDistance(pixelWidth, 1871, 35);
 
         frameToCropTransform = ImageUtils.getTransformationMatrix(previewWidth, previewHeight,
                 INPUT_SIZE, INPUT_SIZE, sensorOrientation, MAINTAIN_ASPECT);
@@ -117,45 +133,48 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
             }
             Log.e(LOGGING_TAG, ex.getMessage());
         }
-
+        Log.e(LOGGING_TAG, "yolothread");
         runInBackground(() -> {
             final long startTime = SystemClock.uptimeMillis();
-            final List<Recognition> results = recognizer.recognizeImage(croppedBitmap);
-
-            Log.e(LOGGING_TAG, results.toString());
-            if(results.size()>0) {
-                final Recognition firstResult = results.get(0);
-                BoxPosition yoloBox  = results.get(0).getLocation();
-                Float width = firstResult.getLocation().getWidth();
-                Float height = firstResult.getLocation().getHeight();
-                Bitmap elBitmap = Bitmap.createBitmap(
-                        croppedBitmap,
-                        Math.abs(Math.round(yoloBox.getLeft())),
-                        Math.abs(Math.round(yoloBox.getTop())),
-                        Math.round(yoloBox.getWidth()),
-                        Math.round(yoloBox.getHeight()),
-                        null,
-                        false
-                );
-
-                Bitmap edgeBmp = Canny.detectEdges(elBitmap);
-                int widthInPix = EdgeMeasurer.getWidth(edgeBmp);Log.e(LOGGING_TAG,"Width In Pix:" + widthInPix);
-                DistanceCalculator distanceCalculator1 = new DistanceCalculator();
-                DistanceCalculator distanceCalculator2 = new DistanceCalculator();
-                distanceCalculator1.setFocalLength(26);
-                distanceCalculator2.setFocalLength(35);
-
-                Toast toast = Toast.makeText(selfActivity, "D1:" + distanceCalculator1.calculateDistance(widthInPix, 4318) + " D2:" + distanceCalculator2.calculateDistance(widthInPix, 4318), Toast.LENGTH_LONG);
-                toast.show();
-                Log.e(LOGGING_TAG,"Calculator1: "+ distanceCalculator1.calculateDistance(widthInPix, 4318));
-                Log.e(LOGGING_TAG,"Calculator2: "+distanceCalculator1.calculateDistance(widthInPix, 4318));
-            }
+            results = recognizer.recognizeImage(croppedBitmap);
+            Log.e(LOGGING_TAG, "inside yolo thread");
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
             overlayView.setResults(results);
-            speak(results);
             requestRender();
             computing = false;
         });
+        Log.e(LOGGING_TAG, "Cannythread");
+        runInBackground2(() -> {
+            while(true) {
+                Log.e(LOGGING_TAG, "Waowao:" + widthInPix);
+                if (results != null && results.size() > 0) {
+                    final long startTime = SystemClock.uptimeMillis();
+                    BoxPosition yoloBox = results.get(0).getLocation();
+                    if (yoloBox.getLeft() + yoloBox.getWidth() <= croppedBitmap.getWidth() && yoloBox.getTop() + yoloBox.getHeight() <= croppedBitmap.getWidth()) {
+                        Bitmap elBitmap = Bitmap.createBitmap(
+                                croppedBitmap,
+                                Math.abs(Math.round(yoloBox.getLeft())),
+                                Math.abs(Math.round(yoloBox.getTop())),
+                                Math.round(yoloBox.getWidth()),
+                                Math.round(yoloBox.getHeight()),
+                                null,
+                                false
+                        );
+
+                        Bitmap edgeBmp = Canny.detectEdges(elBitmap);
+                        widthInPix = EdgeMeasurer.getWidth(edgeBmp);
+                        Log.e(LOGGING_TAG, "Width In Pix:" + widthInPix);
+                    } else {
+                        widthInPix = Math.round(yoloBox.getWidth());
+                    }
+                    lastDistanceProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
+
+                }
+            }
+        });
+
+
     }
 
     private void fillCroppedBitmap(final Image image) {
@@ -175,16 +194,15 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
 
     private void renderAdditionalInformation(final Canvas canvas) {
         final Vector<String> lines = new Vector();
-        if (recognizer != null) {
-            for (String line : recognizer.getStatString().split("\n")) {
-                lines.add(line);
-            }
-        }
 
+        lines.add("");
         lines.add("Frame: " + previewWidth + "x" + previewHeight);
         lines.add("View: " + canvas.getWidth() + "x" + canvas.getHeight());
         lines.add("Rotation: " + sensorOrientation);
         lines.add("Inference time: " + lastProcessingTimeMs + "ms");
+        lines.add("Distance Calculation Time:" + lastDistanceProcessingTimeMs );
+        lines.add("Focal Length: "+ focalLength);
+        lines.add("D1: " + DistanceCalculator.calculateDistance(widthInPix,4318,focalLength));
 
         borderedText.drawLines(canvas, 10, 10, lines);
     }

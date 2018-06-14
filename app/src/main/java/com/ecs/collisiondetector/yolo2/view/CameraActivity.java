@@ -27,6 +27,8 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
 
     private Handler handler;
     private HandlerThread handlerThread;
+    private Handler handler2;
+    private HandlerThread handlerThread2;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -49,6 +51,9 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
         handlerThread = new HandlerThread("inference");
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
+        handlerThread2 = new HandlerThread("distance Measure");
+        handlerThread2.start();
+        handler2 = new Handler(handlerThread2.getLooper());
     }
 
     @Override
@@ -65,6 +70,15 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
         } catch (final InterruptedException ex) {
             Log.e(LOGGING_TAG, "Exception: " + ex.getMessage());
         }
+        handlerThread2.interrupt();
+        handlerThread2.quitSafely();
+        try {
+            handlerThread2.join();
+            handlerThread2 = null;
+            handler2 = null;
+        } catch (final InterruptedException ex) {
+            Log.e(LOGGING_TAG, "Exception: " + ex.getMessage());
+        }
 
         super.onPause();
     }
@@ -72,6 +86,11 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
     protected synchronized void runInBackground(final Runnable runnable) {
         if (handler != null) {
             handler.post(runnable);
+        }
+    }
+    protected synchronized void runInBackground2(final Runnable runnable) {
+        if(handler2 !=null){
+            handler2.post(runnable);
         }
     }
 
