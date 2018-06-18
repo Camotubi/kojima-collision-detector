@@ -1,11 +1,13 @@
 package com.ecs.collisiondetector.yolo2.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
@@ -27,6 +29,9 @@ public class OverlayView extends View {
     private List<Recognition> results;
     private List<Integer> colors;
     private float resultsViewHeight;
+    public Bitmap elbitmap;
+
+
 
     public OverlayView(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -50,6 +55,7 @@ public class OverlayView extends View {
             callback.drawCallback(canvas);
         }
 
+
         if (results != null) {
             for (int i = 0; i < results.size(); i++) {
                 RectF box = reCalcSize(results.get(i).getLocation());
@@ -58,7 +64,12 @@ public class OverlayView extends View {
                 paint.setColor(colors.get(results.get(i).getId()));
                 canvas.drawRect(box, paint);
                 canvas.drawText(title, box.left, box.top, paint);
+                if (elbitmap != null) {
+                    canvas.drawBitmap(elbitmap,box.left,box.top,null);
+                }
+
             }
+
         }
     }
 
@@ -67,6 +78,7 @@ public class OverlayView extends View {
         postInvalidate();
     }
 
+
     /**
      * Interface defining the callback for client classes.
      */
@@ -74,7 +86,7 @@ public class OverlayView extends View {
         void drawCallback(final Canvas canvas);
     }
 
-    private RectF reCalcSize(BoxPosition rect) {
+    public RectF reCalcSize(BoxPosition rect) {
         int padding = 5;
         float overlayViewHeight = this.getHeight() - resultsViewHeight;
         float sizeMultiplier = Math.min((float) this.getWidth() / (float) Config.INPUT_SIZE,

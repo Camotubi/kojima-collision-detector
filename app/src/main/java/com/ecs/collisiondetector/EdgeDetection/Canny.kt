@@ -12,7 +12,6 @@ class Canny {
         fun detectEdges(bitmap: Bitmap): Bitmap {
             val rgba = Mat()
             Utils.bitmapToMat(bitmap, rgba)
-
             val edges = Mat(rgba.size(), CvType.CV_8UC1)
             Imgproc.cvtColor(rgba, edges, Imgproc.COLOR_RGB2GRAY, 4)
             Imgproc.Canny(edges, edges, 80.0, 100.0)

@@ -2,10 +2,12 @@ package com.ecs.collisiondetector.yolo2.view;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -15,6 +17,13 @@ import android.widget.Toast;
 //import com.ecs.collisiondetector.yolo2.R;
 
 import com.ecs.collisiondetector.R;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Calendar;
 
 import static com.ecs.collisiondetector.yolo2.Config.LOGGING_TAG;
 
@@ -29,6 +38,8 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
     private HandlerThread handlerThread;
     private Handler handler2;
     private HandlerThread handlerThread2;
+    protected String textToWrite = "Start: " + Calendar.getInstance().getTime();
+    protected boolean goCanny = true;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -47,7 +58,7 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
     @Override
     public synchronized void onResume() {
         super.onResume();
-
+        goCanny = true;
         handlerThread = new HandlerThread("inference");
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
@@ -58,6 +69,8 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
 
     @Override
     public synchronized void onPause() {
+        writeToFile(textToWrite);
+        goCanny = false;
         if (!isFinishing()) {
             finish();
         }
@@ -93,7 +106,21 @@ public abstract class CameraActivity extends Activity implements OnImageAvailabl
             handler2.post(runnable);
         }
     }
+    private synchronized void writeToFile(String data) {
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        if(!dir.exists())
+            dir.mkdirs();
+        File file = new File(dir, "yolo_log.txt");
 
+//Write to file
+        try (FileWriter fileWriter = new FileWriter(file,true)) {
+            fileWriter.append(data);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            //Handle exception
+        }
+    }
     @Override
     public void onRequestPermissionsResult(final int requestCode, final String[] permissions,
                                            final int[] grantResults) {
