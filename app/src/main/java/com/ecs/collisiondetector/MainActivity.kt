@@ -3,23 +3,22 @@ package com.ecs.collisiondetector
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.view.View.OnClickListener
-import com.ecs.collisiondetector.yolo2.view.ClassifierActivity
-import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
-import android.os.Build
 import android.util.Log
-import android.view.WindowManager
+import android.view.View.VISIBLE
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.Spinner
-import com.ecs.collisiondetector.EdgeDetection.Canny
-import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer
+import android.widget.Toast
+import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.BaseLoaderCallback
+import java.io.*
+import android.widget.CompoundButton
+import com.ecs.collisiondetector.yolo2.view.ClassifierActivity
 
 
 class MainActivity : AppCompatActivity() , OnClickListener {
@@ -41,15 +40,32 @@ class MainActivity : AppCompatActivity() , OnClickListener {
 
         setContentView(R.layout.activity_main)
 
-        val button : Button = findViewById(R.id.button)
-        button.setOnClickListener(this)
+        val cameraButton : Button = findViewById(R.id.cameraButton)
+        cameraButton.setOnClickListener(this)
+        logButton.setOnClickListener(View.OnClickListener {
+            logTextView.setText(SeeLog())
+        })
         val spinner : Spinner = findViewById(R.id.spinner)
         val supportedDevicesStringList = DistanceCalculator.supportedDevicesList.map{ it.name }.toTypedArray()
         var spinnerAdapter = ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, supportedDevicesStringList)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = spinnerAdapter
 
+        logCheckBox.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (logCheckBox.isChecked){
+                SecTextBox.visibility = VISIBLE
+                SecTextView.visibility = VISIBLE
+            }
+        }
 
+        val wasLogSuccessful = intent.getBooleanExtra("wasLogSuccessful", false)
+        Log.e("Hola", "llegue aqui")
+        if (wasLogSuccessful){
+            logButton.visibility = VISIBLE
+            Toast.makeText(baseContext, "Log was successful", Toast.LENGTH_SHORT)
+        }else{
+            Toast.makeText(baseContext, "Log wasn't successful", Toast.LENGTH_SHORT)
+        }
 
     }
 
@@ -72,7 +88,27 @@ class MainActivity : AppCompatActivity() , OnClickListener {
         val spinner = findViewById<Spinner>(R.id.spinner)
         val focalLength =  DistanceCalculator.supportedDevicesList[spinner.selectedItemPosition].focalLength
         intent.putExtra("focalLength",focalLength)
+        if (logCheckBox.isChecked){
+            intent.putExtra("amountOfSeconds", Integer.parseInt(SecTextBox.text.toString()))
+        }
         this.startActivity(intent)
+    }
+
+    private fun SeeLog(): String {
+        val `is`: InputStream
+        var logText = StringBuilder()
+        try {
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Log.txt")
+            `is` = FileInputStream(file)
+            val br = BufferedReader(InputStreamReader(`is`))
+            logText.append(br.readLine())
+            `is`.close()
+            br.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("FILE", "File not found")
+        }
+        return logText.toString()
     }
 
     //Function to call and manage the fragments

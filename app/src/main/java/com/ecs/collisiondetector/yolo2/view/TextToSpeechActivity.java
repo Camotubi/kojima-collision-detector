@@ -40,6 +40,14 @@ public abstract class TextToSpeechActivity extends CameraActivity implements Tex
         textToSpeech = new TextToSpeech(this, this);
     }
 
+    @Override
+    protected void onDestroy() {
+        if (textToSpeech != null){
+            textToSpeech.shutdown();
+        }
+        super.onDestroy();
+    }
+
     protected void speak(List<Recognition> results) {
         if (!(results.isEmpty() || lastRecognizedClass.equals(results.get(0).getTitle()))) {
             lastRecognizedClass = results.get(0).getTitle();

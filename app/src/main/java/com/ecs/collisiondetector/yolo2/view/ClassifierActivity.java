@@ -1,7 +1,5 @@
 package com.ecs.collisiondetector.yolo2.view;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -13,15 +11,16 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
-import android.widget.Toast;
 
 import com.ecs.collisiondetector.DistanceCalculator;
 import com.ecs.collisiondetector.EdgeDetection.Canny;
 import com.ecs.collisiondetector.EdgeDetection.EdgeMeasurer;
+import com.ecs.collisiondetector.MainActivity;
 import com.ecs.collisiondetector.yolo2.TensorFlowImageRecognizer;
 import com.ecs.collisiondetector.yolo2.model.BoxPosition;
 import com.ecs.collisiondetector.yolo2.model.Recognition;
@@ -31,9 +30,9 @@ import com.ecs.collisiondetector.R;
 
 import com.ecs.collisiondetector.yolo2.view.components.BorderedText;
 
-import org.apache.commons.math3.genetics.TournamentSelection;
-
-import java.io.FileOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -43,7 +42,7 @@ import static com.ecs.collisiondetector.yolo2.Config.LOGGING_TAG;
 /**
  * Classifier activity class
  * Modified by Zoltan Szabo
- */
+*/
 public class ClassifierActivity extends TextToSpeechActivity implements OnImageAvailableListener {
     private boolean MAINTAIN_ASPECT = true;
     private float TEXT_SIZE_DIP = 10;
@@ -66,6 +65,11 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
     private Bitmap imageBitmap = null;
     private long timeToDetectCar = 0;
     private long lastTimeDetectcar = 0;
+    private long timeToCompleteLog = 0;
+    private long startActivityTime = 0;
+    private double lastDistance = 0;
+    private boolean logSuccessful = false;
+    private long currentThreadTime = 0;
 
 
 
@@ -73,8 +77,9 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
     @Override
     public synchronized  void onCreate(Bundle bundle) {
         Intent intent = getIntent();
-        focalLength = intent.getDoubleExtra("focalLength",0.0);
-
+        focalLength = intent.getDoubleExtra("focalLength", 0.0);
+        timeToCompleteLog = intent.getIntExtra("amountOfSeconds", 0) * 1000;
+        startActivityTime = SystemClock.uptimeMillis();
         super.onCreate(bundle);
     }
     @Override
@@ -168,11 +173,12 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
             computing = false;
         });
         runInBackground2(() -> {
-           // while(goCanny) {
-                if (results != null && results.size() > 0) {
-                    final long startTime = SystemClock.uptimeMillis();
-                    BoxPosition yoloBox = results.get(0).getLocation();
-                    RectF yoloRect = overlayView.reCalcSize(yoloBox);
+            Log.e("Thread2", "Ya entre!!!");
+            currentThreadTime = SystemClock.uptimeMillis();
+               if (results != null && results.size() > 0) {
+                   final long startTime = SystemClock.uptimeMillis();
+                   BoxPosition yoloBox = results.get(0).getLocation();
+                   RectF yoloRect = overlayView.reCalcSize(yoloBox);
 
 
                     /*if (
@@ -181,46 +187,70 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
                                     yoloBox.getLeft() + yoloBox.getWidth() <= croppedBitmap.getWidth() &&
                                     yoloBox.getTop() + yoloBox.getHeight() <= croppedBitmap.getHeight()
                             ) { */
-                    Log.e(LOGGING_TAG,"LEFT:" + ( yoloBox.getLeft() + yoloBox.getWidth() /2));
-                    Log.e(LOGGING_TAG,"TOP:" + (yoloBox.getTop() + yoloBox.getHeight() / 2));
-                    Log.e(LOGGING_TAG,yoloBox.toString());
-                    Log.e(LOGGING_TAG,"imageBitamp " + croppedBitmap.getWidth() + " + " + croppedBitmap.getHeight() );
-                    float offsetX = 0;
-                    float offsetY = 0;
+                   Log.e(LOGGING_TAG, "LEFT:" + (yoloBox.getLeft() + yoloBox.getWidth() / 2));
+                   Log.e(LOGGING_TAG, "TOP:" + (yoloBox.getTop() + yoloBox.getHeight() / 2));
+                   Log.e(LOGGING_TAG, yoloBox.toString());
+                   Log.e(LOGGING_TAG, "imageBitamp " + croppedBitmap.getWidth() + " + " + croppedBitmap.getHeight());
+                   float offsetX = 0;
+                   float offsetY = 0;
 
-                    float left = Math.max(0,yoloBox.getLeft() + offsetX);
-                    float top = Math.max(offsetY, yoloBox.getTop() + offsetY);
+                   float left = Math.max(0, yoloBox.getLeft() + offsetX);
+                   float top = Math.max(offsetY, yoloBox.getTop() + offsetY);
 
-                    float right = Math.min(yoloBox.getRight() ,  416);
-                    float bottom = Math.min(yoloBox.getBottom() + offsetY, 416);
+                   float right = Math.min(yoloBox.getRight(), 416);
+                   float bottom = Math.min(yoloBox.getBottom() + offsetY, 416);
 
-                    Bitmap elBitmap = Bitmap.createBitmap(
-                            croppedBitmap,
-                            Math.round(left),
-                            Math.round(top),
-                            Math.round(right - left),
-                            Math.round(bottom - top),
-                            null,
-                            false
-                    );
+                   Bitmap elBitmap = Bitmap.createBitmap(
+                           croppedBitmap,
+                           Math.round(left),
+                           Math.round(top),
+                           Math.round(right - left),
+                           Math.round(bottom - top),
+                           null,
+                           false
+                   );
 
-                    Bitmap edgeBmp = Canny.detectEdges(elBitmap);
-                    overlayView.elbitmap = edgeBmp;
-                    requestRender();
-                    widthInPix = EdgeMeasurer.getWidth(edgeBmp);
+                   Bitmap edgeBmp = Canny.detectEdges(elBitmap);
+                   overlayView.elbitmap = edgeBmp;
+                   requestRender();
+                   widthInPix = EdgeMeasurer.getWidth(edgeBmp);
 
-                    lastDistanceProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                   lastDistanceProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                   Log.e("CUANTO ES IO?", Long.toString(lastDistanceProcessingTimeMs));
+                   lastDistance = DistanceCalculator.calculateDistance(widthInPix, 4318, focalLength);
 
-
-                }
-            //}
+               }
         });
 
         this.textToWrite += "\nLastDistanceProcessingTimeMs:" + lastDistanceProcessingTimeMs + "\n"+
-                "lastProcessingTime: " + lastProcessingTimeMs + "\n";
+                "lastProcessingTime: " + lastProcessingTimeMs + "\n" +
+                "Distance: " + lastDistance;
 
-                ;
+        logSuccessful = writeToFile(textToWrite);
+        if((currentThreadTime - startActivityTime) > timeToCompleteLog){
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("wasLogSuccessful", logSuccessful);
+            startActivity(intent);
+        }
+    }
 
+    private boolean writeToFile(String data) {
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        if(!dir.exists())
+            dir.mkdirs();
+        File file = new File(dir,"Log.txt");
+        if(file.exists() && file.isFile()) {
+            file.delete();
+        }
+        try (FileWriter fileWriter = new FileWriter(file,true)) {
+            fileWriter.write(data);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     private void fillCroppedBitmap(final Image image) {
@@ -250,10 +280,11 @@ public class ClassifierActivity extends TextToSpeechActivity implements OnImageA
         lines.add("Inference time: " + lastProcessingTimeMs + "ms");
         lines.add("Distance Calculation Time:" + lastDistanceProcessingTimeMs );
         lines.add("Focal Length: "+ focalLength);
-        lines.add("D1: " + DistanceCalculator.calculateDistance(widthInPix,4318,focalLength));
+        lines.add("D1: " + lastDistance);
 
         borderedText.drawLines(canvas, 10, 10, lines);
     }
 
 
 }
+
